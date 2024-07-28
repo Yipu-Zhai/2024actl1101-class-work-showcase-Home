@@ -1,0 +1,21 @@
+theme: jekyll-theme-slate
+# Sample navigation
+
+defaults:
+  - scope:
+      path: ""
+    values:
+      layout: "default"
+
+navigation:
+  - title: Home
+    url: /
+  - title: Probability
+    url: /probability.md
+  - title: Financial Mathematics
+    url: /financial_math.md
+  - title: ...
+  - title: Life Insurance
+    url: /life.md
+  - title: Statistical Machine Learning and AI
+    url: /statsml.md
