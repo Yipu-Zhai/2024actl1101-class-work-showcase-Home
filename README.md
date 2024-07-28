@@ -15,7 +15,7 @@ _"Tell me and I forget. Teach me and I remember. Involve me and I learn" - Benja
 
 This is written in markdown language. 
 >
-* Click [link](https://classroom.github.com/a/eILAODpc) to accept your assignment.
+* Click [link](https://classroom.github.com/a/88OH4FkH) to accept your assignment.
 
 
 * [Probability](probability.md)
