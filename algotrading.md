@@ -70,16 +70,34 @@ previous_price <- 0
 share_size <- 100
 accumulated_shares <- 0
 
-for (i in 1:nrow(amd_df)) {
-# Fill your code here
+for (i in 1:(nrow(amd_df)-1)) {
+if(previous_price == 0){
+amd_df$trade_type[i] <- "buy"
+amd_df$costs_proceeds[i] <- -100*amd_df$close[i]
+amd_df$accumulated_shares[i] <- 100
 }
+else if(amd_df$close[i] < previous_price){
+amd_df$trade_type[i] <- "buy"
+amd_df$costs_proceeds[i] <- -100*amd_df$close[i]
+amd_df$accumulated_shares[i] <- amd_df$accumulated_shares[i-1]+100
+}
+else{
+amd_df$trade_type[i] <- ""
+amd_df$costs_proceeds[i] <- 0
+amd_df$accumulated_shares[i] <- amd_df$accumulated_shares[i-1]
+}
+previous_price <- amd_df$close[i]
+}
+amd_df$trade_type[nrow(amd_df)] <- "sell"
+amd_df$accumulated_shares[nrow(amd_df)] <- 0
+amd_df$costs_proceeds[nrow(amd_df)] <- amd_df$accumulated_shares[nrow(amd_df)-1]*amd_df$close[nrow(amd_df)]
 ```
 
 
 ### Step 3: Customize Trading Period
 - Define a trading period you wanted in the past five years 
 ```r
-# Fill your code here
+print("I choose the whole past five years")
 ```
 
 
@@ -91,7 +109,16 @@ After running your algorithm, check if the trades were executed as expected. Cal
 - ROI Formula: $$\text{ROI} = \left( \frac{\text{Total Profit or Loss}}{\text{Total Capital Invested}} \right) \times 100$$
 
 ```r
-# Fill your code here
+total_profit_or_loss <- 0
+ROI <- 0
+for (i in 1:(nrow(amd_df))){
+total_profit_or_loss <- total_profit_or_loss+amd_df$costs_proceeds[i]
+}
+ROI <- total_profit_or_loss/-(total_profit_or_loss-amd_df$costs_proceeds[nrow(amd_df)])
+test <- paste("Total Profit or Loss is ",round(total_profit_or_loss)," (to the nearest integer)")
+print(test)
+test <- paste("ROI is ",round(ROI*100),"% (to the nearest integer)")
+print(test)
 ```
 
 ### Step 5: Profit-Taking Strategy or Stop-Loss Mechanisum (Choose 1)
@@ -100,7 +127,7 @@ After running your algorithm, check if the trades were executed as expected. Cal
 
 
 ```r
-# Fill your code here
+print("I choose option 2")
 ```
 
 
@@ -110,11 +137,62 @@ After running your algorithm, check if the trades were executed as expected. Cal
 
 
 ```r
-# Fill your code here and Disucss
+# Calculate under the new rules
+amd_df$new_trade_type <- NA
+amd_df$new_costs_proceeds <- NA
+amd_df$new_accumulated_shares <- 0
+previous_price <- 0
+share_size <- 100
+accumulated_shares <- 0
+average_purchase_price <- 0
+for (i in 1:(nrow(amd_df)-1)){
+if(previous_price == 0){
+amd_df$new_trade_type[i] <- "buy"
+amd_df$new_costs_proceeds[i] <- -100*amd_df$close[i]
+amd_df$new_accumulated_shares[i] <- 100
+average_purchase_price <- amd_df$close[i]
+}
+# stop-loss mechanism is triggered
+else if(amd_df$close[i] <= average_purchase_price*0.8){
+amd_df$new_trade_type[i] <- "sell"
+amd_df$new_costs_proceeds[i] <- amd_df$close[i]*floor(amd_df$new_accumulated_shares[i-1]/2)# Sell half of the shares (rounded down)
+amd_df$new_accumulated_shares[i] <- amd_df$new_accumulated_shares[i-1]-floor(amd_df$new_accumulated_shares[i-1]/2)
+}
+else if(amd_df$close[i] < previous_price){
+amd_df$new_trade_type[i] <- "buy"
+amd_df$new_costs_proceeds[i] <- -100*amd_df$close[i]
+amd_df$new_accumulated_shares[i] <- amd_df$new_accumulated_shares[i-1]+100
+average_purchase_price <- (average_purchase_price*amd_df$new_accumulated_shares[i-1]+100*amd_df$close[i])/(amd_df$new_accumulated_shares[i])#Update the average purchase price
+}
+else{
+amd_df$new_trade_type[i] <- ""
+amd_df$new_costs_proceeds[i] <- 0
+amd_df$new_accumulated_shares[i] <- amd_df$new_accumulated_shares[i-1]
+}
+previous_price <- amd_df$close[i]
+}
+amd_df$new_trade_type[nrow(amd_df)] <- "sell"
+amd_df$new_costs_proceeds[nrow(amd_df)] <- amd_df$new_accumulated_shares[nrow(amd_df)-1]*amd_df$close[nrow(amd_df)]
+#Calculate the new total profit or loss and the new ROI
+new_total_profit_or_loss <- 0
+new_ROI <- 0
+new_total_capital_invested <- 0
+for (i in 1:(nrow(amd_df))){
+new_total_profit_or_loss <- total_profit_or_loss+amd_df$new_costs_proceeds[i]
+if(amd_df$new_costs_proceeds[i] < 0){
+new_total_capital_invested <- new_total_capital_invested+amd_df$new_costs_proceeds[i]
+}
+}
+new_ROI <- new_total_profit_or_loss/(-1*new_total_capital_invested)
+test <- paste("The New Total Profit or Loss is ",round(new_total_profit_or_loss)," (to the nearest integer)")
+print(test)
+test <- paste("The New ROI is ",round(new_ROI*100),"% (to the nearest integer)")
+print(test)
+#Compare the data and draw conclusions
+if(new_ROI > ROI & new_total_profit_or_loss > total_profit_or_loss){
+print("Yes, my P/L and ROI improve over my chosen period")
+}else{
+print("No, my P/L and ROI don't improve over my chosen period")
+}
+print("Intel released a new product in September 2022 and officially sold it in October, with performance surpassing AMD's products at the time and offering a cheaper price. At that time, Intel's products had a greater advantage, which led to a rapid decline in AMD's stock price, with a price drop of over 20% triggering the stop loss mechanism. So my stop loss mechanism has reduced a lot of losses for the company. Overall, over the past 5 years, the new strategy has earned 3026412 $ more than the old strategy, resulting in a higher ROI.")
 ```
-
-Sample Discussion: On Wednesday, December 6, 2023, AMD CEO Lisa Su discussed a new graphics processor designed for AI servers, with Microsoft and Meta as committed users. The rise in AMD shares on the following Thursday suggests that investors believe in the chipmaker's upward potential and market expectations; My first strategy earned X dollars more than second strategy on this day, therefore providing a better ROI.
-
-
-
-
