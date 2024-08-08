@@ -81,7 +81,8 @@ $$
 $$
 
 ```r
-#fill the code
+df<-df %>%
+mutate(AMD_Return=(AMD-lag(AMD))/lag(AMD),GSPC_Return=(GSPC-lag(GSPC))/lag(GSPC))
 ```
 
 - **Calculate Risk-Free Rate**: Calculate the daily risk-free rate by conversion of annual risk-free Rate. This conversion accounts for the compounding effect over the days of the year and is calculated using the formula:
@@ -91,21 +92,24 @@ $$
 $$
 
 ```r
-#fill the code
+df<-df %>%
+mutate(Risk_Free_Rate=(1+RF/100)^(1/360)-1)
 ```
 
 
 - **Calculate Excess Returns**: Compute the excess returns for AMD and the S&P 500 by subtracting the daily risk-free rate from their respective returns.
 
 ```r
-#fill the code
+df<-df %>%
+mutate(AMD_Excess_Return=AMD_Return-Risk_Free_Rate,GSPC_Excess_Return=GSPC_Return-Risk_Free_Rate)
 ```
 
 
 - **Perform Regression Analysis**: Using linear regression, we estimate the beta (\(\beta\)) of AMD relative to the S&P 500. Here, the dependent variable is the excess return of AMD, and the independent variable is the excess return of the S&P 500. Beta measures the sensitivity of the stock's returns to fluctuations in the market.
 
 ```r
-#fill the code
+model<-lm(AMD_Excess_Return~GSPC_Excess_Return,data=df)
+summary(model)
 ```
 
 
@@ -113,14 +117,19 @@ $$
 
 What is your \(\beta\)? Is AMD more volatile or less volatile than the market?
 
-**Answer:**
+**Answer:My bate is 1.5699987. Since my bate is large than 1, AMD is more volatile than the market.**
 
 
 #### Plotting the CAPM Line
 Plot the scatter plot of AMD vs. S&P 500 excess returns and add the CAPM regression line.
 
 ```r
-#fill the code
+ggplot(df,aes(x=GSPC_Excess_Return,y=AMD_Excess_Return))+
+geom_point()+
+geom_smooth(method="lm",col="red")+
+labs(title = "CAPM Analysis",
+x="S&P 500 Excess Return",
+y="AMD Excess Return")
 ```
 
 ### Step 3: Predictions Interval
@@ -128,8 +137,11 @@ Suppose the current risk-free rate is 5.0%, and the annual expected return for t
 
 
 
-**Answer:**
+**Answer:between 17.16% and 18.90%**
 
 ```r
-#fill the code
+expected_return_AMD<-5+1.5699987*(13.3-5)
+Prediction_Interval<-1.645*sqrt(252)*sd(df$AMD_Excess_Return,na.rm=TRUE)
+lower_bound<-expected_return_AMD-1.645*sqrt(252)*sd(df$AMD_Excess_Return,na.rm=TRUE)
+upper_bound<-expected_return_AMD+1.645*sqrt(252)*sd(df$AMD_Excess_Return,na.rm=TRUE)
 ```
